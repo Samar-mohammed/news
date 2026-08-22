@@ -1,0 +1,39 @@
+name: نشرة أخبار الذكاء الاصطناعي
+
+on:
+  schedule:
+    # 05:00 UTC = 8:00 صباحًا بتوقيت الرياض. قد تتأخر الجدولة 5-20 دقيقة في أوقات الذروة.
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+
+jobs:
+  send-digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      # مفتاح متجدد لأن ذاكرة التخزين غير قابلة للتعديل بعد إنشائها،
+      # و restore-keys يسترجع أحدث نسخة محفوظة من التشغيلة السابقة.
+      - name: استرجاع ذاكرة الأخبار المرسلة
+        uses: actions/cache@v6
+        with:
+          path: state
+          key: seen-news-${{ github.run_id }}
+          restore-keys: seen-news-
+
+      - name: إرسال النشرة
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python main.py
