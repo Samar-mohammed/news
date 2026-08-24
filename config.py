@@ -60,6 +60,17 @@ DISPLAY_TIMEZONE_LABEL = "بتوقيت الرياض"
 # تقرير المشاريع الأسبوعي: الجمعة (Monday=0) داخل نفس إيميل الأخبار.
 WEEKLY_PROJECTS_WEEKDAY = 4
 GITHUB_PROJECT_COUNT = 5
-HUGGINGFACE_PROJECT_COUNT = 5
+HUGGINGFACE_PROJECT_COUNT = 3
+PRODUCT_HUNT_COUNT = 5
 PROJECT_LOOKBACK_DAYS = 7
 PROJECT_API_TIMEOUT = 25
+
+# مواضيع GitHub التي تدخل التقرير. تُبحث منفصلة ثم تُدمج وتُرتب بالنجوم.
+GITHUB_AI_TOPICS = [
+    "artificial-intelligence",
+    "machine-learning",
+    "large-language-models",
+    "generative-ai",
+    "ai-agents",
+]
+PRODUCT_HUNT_AI_TOPIC = "artificial-intelligence"

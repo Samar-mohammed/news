@@ -25,9 +25,13 @@ TechCrunch AI · The Verge AI · Ars Technica AI · Wired AI · OpenAI Blog · G
 
 ## تقرير المشاريع الأسبوعي
 
-في تشغيل يوم الجمعة بتوقيت الرياض، تُضاف إلى نفس رسالة الأخبار فقرتان: أبرز 5 مستودعات GitHub المنشأة خلال آخر 7 أيام والمرتبة بالنجوم، وأبرز 5 نماذج أو Datasets أو Spaces رائجة من Hugging Face. يشرح النموذج كل عنصر بالعربية، وتُحفظ روابط العناصر المرسلة لمنع تكرارها.
+في تشغيل يوم الجمعة بتوقيت الرياض، تُضاف إلى نفس رسالة الأخبار أقسام لأبرز 5 مستودعات GitHub المرتبطة بالذكاء الاصطناعي والمنشأة خلال آخر 7 أيام والمرتبة بالنجوم، وأبرز 3 عناصر رائجة من Hugging Face، وأفضل 5 منتجات AI من Product Hunt. يشرح النموذج كل عنصر بالعربية، وتُحفظ روابط العناصر المرسلة لمنع تكرارها.
 
-يعمل الجلب العام دون مفاتيح إضافية، لكن يُنصح بإضافة `GITHUB_TOKEN` و`HF_TOKEN` إلى ملف `.env` محليًا وإلى GitHub Actions Secrets لرفع حدود الطلبات وتحسين الاستقرار. يمكن تغيير اليوم والأعداد والنافذة الزمنية من إعدادات `WEEKLY_PROJECTS_*` و`GITHUB_PROJECT_COUNT` و`HUGGINGFACE_PROJECT_COUNT` و`PROJECT_LOOKBACK_DAYS` في [config.py](config.py).
+نتائج Hugging Face موزعة إلى Model واحد، وDataset واحدة، وSpace واحدة. تُفضّل النسخة الأصلية على نسخ GGUF وMLX وFP8 والنسخ المعدلة، كما تُحفظ عائلة النموذج لمنع ظهور نسخة أخرى منها في تقرير لاحق.
+
+يضاف كذلك قسم لأبرز 5 منتجات AI أسبوعية من Product Hunt، مرتبة بعدد الأصوات ومحصورة في موضوع Artificial Intelligence. يتطلب هذا القسم Developer Token باسم `PRODUCT_HUNT_TOKEN` من [Product Hunt API Dashboard](https://www.producthunt.com/v2/oauth/applications).
+
+يعمل جلب GitHub وHugging Face العام دون مفاتيح إضافية، لكن يُنصح بإضافة `GITHUB_TOKEN` و`HF_TOKEN` إلى ملف `.env` محليًا وإلى GitHub Actions Secrets لرفع حدود الطلبات وتحسين الاستقرار. يحتاج Product Hunt إلى `PRODUCT_HUNT_TOKEN`. يمكن تغيير اليوم والأعداد والنافذة الزمنية من إعدادات `WEEKLY_PROJECTS_*` و`GITHUB_PROJECT_COUNT` و`HUGGINGFACE_PROJECT_COUNT` و`PRODUCT_HUNT_COUNT` و`PROJECT_LOOKBACK_DAYS` في [config.py](config.py).
 
 ## الإعداد
 

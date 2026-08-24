@@ -61,7 +61,7 @@ def build_digest(articles: list[Article]) -> tuple[list[DigestItem], str, str]:
         return _fallback_items(selected), "", FALLBACK_WARNING
 
 
-def run(dry_run: bool = False) -> int:
+def run(dry_run: bool = False, force_weekly: bool = False) -> int:
     load_dotenv()
 
     local_now = datetime.now(timezone.utc) + timedelta(
@@ -71,7 +71,7 @@ def run(dry_run: bool = False) -> int:
 
     seen = state.load_seen()
     articles, window_hours = fetch_articles(exclude=set(seen))
-    weekly = local_now.weekday() == config.WEEKLY_PROJECTS_WEEKDAY
+    weekly = force_weekly or local_now.weekday() == config.WEEKLY_PROJECTS_WEEKDAY
     project_seen = state.load_seen_projects() if weekly else {}
     projects, project_warnings = fetch_weekly_projects(set(project_seen)) if weekly else ([], [])
     if not articles and not projects:
@@ -89,13 +89,14 @@ def run(dry_run: bool = False) -> int:
         warning = " ".join(filter(None, (warning, "تعذّر شرح المشاريع آليًا؛ عُرض وصفها الأصلي.")))
     github_items = [x for x in project_items if x.source.startswith("GitHub")]
     huggingface_items = [x for x in project_items if x.source.startswith("Hugging Face")]
+    product_hunt_items = [x for x in project_items if x.source.startswith("Product Hunt")]
     if project_warnings:
         warning = " ".join(filter(None, (warning, *project_warnings)))
     log_token_total()
 
     coverage = f"تغطية آخر {window_hours} ساعة"
-    html_body = emailer.render_html(items, date_label, intro, warning, coverage, github_items, huggingface_items)
-    text_body = emailer.render_text(items, date_label, intro, github_items, huggingface_items)
+    html_body = emailer.render_html(items, date_label, intro, warning, coverage, github_items, huggingface_items, product_hunt_items)
+    text_body = emailer.render_text(items, date_label, intro, github_items, huggingface_items, product_hunt_items)
     weekly_label = " + التقرير الأسبوعي" if project_items else ""
     subject = f"نشرة الذكاء الاصطناعي - {local_now:%Y-%m-%d} ({len(items)} أخبار){weekly_label}"
 
@@ -111,7 +112,12 @@ def run(dry_run: bool = False) -> int:
     # الذاكرة تُحدَّث بعد نجاح الإرسال فقط، وإلا ضاعت أخبار لم تصل أصلًا.
     state.save_seen(state.remember([item.url for item in items], seen))
     if projects:
-        state.save_seen_projects(state.remember([item.url for item in project_items], project_seen))
+        updated_projects = state.remember([item.url for item in project_items], project_seen)
+        sent_at = datetime.now(timezone.utc).isoformat()
+        for project in projects:
+            if project.memory_key:
+                updated_projects[project.memory_key] = sent_at
+        state.save_seen_projects(updated_projects)
     return 0
 
 
@@ -134,10 +140,15 @@ def main() -> int:
         action="store_true",
         help="حفظ النشرة في preview.html بدل إرسالها بالإيميل",
     )
+    parser.add_argument(
+        "--weekly",
+        action="store_true",
+        help="إضافة تقرير GitHub وHugging Face الأسبوعي حتى لو لم يكن اليوم الجمعة",
+    )
     args = parser.parse_args()
 
     try:
-        return run(dry_run=args.dry_run)
+        return run(dry_run=args.dry_run, force_weekly=args.weekly)
     except Exception as exc:
         print(f"فشل التشغيل: {exc}", file=sys.stderr)
         return 1
