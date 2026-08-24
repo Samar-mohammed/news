@@ -56,3 +56,10 @@ HTTP_USER_AGENT = (
 # التوقيت المستخدم في عنوان الإيميل وتاريخه.
 DISPLAY_TIMEZONE_OFFSET_HOURS = 3
 DISPLAY_TIMEZONE_LABEL = "بتوقيت الرياض"
+
+# تقرير المشاريع الأسبوعي: الجمعة (Monday=0) داخل نفس إيميل الأخبار.
+WEEKLY_PROJECTS_WEEKDAY = 4
+GITHUB_PROJECT_COUNT = 5
+HUGGINGFACE_PROJECT_COUNT = 5
+PROJECT_LOOKBACK_DAYS = 7
+PROJECT_API_TIMEOUT = 25

@@ -23,6 +23,12 @@ TechCrunch AI · The Verge AI · Ars Technica AI · Wired AI · OpenAI Blog · G
 
 لتعديل القائمة، عدّل `FEEDS` في [config.py](config.py).
 
+## تقرير المشاريع الأسبوعي
+
+في تشغيل يوم الجمعة بتوقيت الرياض، تُضاف إلى نفس رسالة الأخبار فقرتان: أبرز 5 مستودعات GitHub المنشأة خلال آخر 7 أيام والمرتبة بالنجوم، وأبرز 5 نماذج أو Datasets أو Spaces رائجة من Hugging Face. يشرح النموذج كل عنصر بالعربية، وتُحفظ روابط العناصر المرسلة لمنع تكرارها.
+
+يعمل الجلب العام دون مفاتيح إضافية، لكن يُنصح بإضافة `GITHUB_TOKEN` و`HF_TOKEN` إلى ملف `.env` محليًا وإلى GitHub Actions Secrets لرفع حدود الطلبات وتحسين الاستقرار. يمكن تغيير اليوم والأعداد والنافذة الزمنية من إعدادات `WEEKLY_PROJECTS_*` و`GITHUB_PROJECT_COUNT` و`HUGGINGFACE_PROJECT_COUNT` و`PROJECT_LOOKBACK_DAYS` في [config.py](config.py).
+
 ## الإعداد
 
 ### ١. كلمة مرور تطبيق Gmail

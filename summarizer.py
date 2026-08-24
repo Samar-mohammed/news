@@ -15,6 +15,7 @@ from openai import OpenAI
 
 import config
 from fetcher import Article
+from projects import Project
 
 SELECT_PROMPT = """أنت محرر نشرة أخبار متخصص في الذكاء الاصطناعي، تكتب لقارئ عربي مهتم بالتقنية.
 
@@ -85,6 +86,31 @@ class DigestItem:
 
 class SummarizationError(RuntimeError):
     pass
+
+
+PROJECT_SCHEMA = {
+    "type": "object", "additionalProperties": False, "required": ["items"],
+    "properties": {"items": {"type": "array", "items": {
+        "type": "object", "additionalProperties": False,
+        "required": ["id", "summary_ar"],
+        "properties": {"id": {"type": "integer"}, "summary_ar": {"type": "string"}},
+    }}},
+}
+
+
+def summarize_projects(projects: list[Project]) -> list[DigestItem]:
+    if not projects:
+        return []
+    blocks = [
+        f"id: {i}\nname: {p.name}\nsource: {p.source}\nmetrics: {p.metrics}\ndescription: {p.description}"
+        for i, p in enumerate(projects)
+    ]
+    prompt = """اشرح كل مشروع لقارئ عربي مهتم بالتقنية في جملتين قصيرتين لا تتجاوزان 45 كلمة: ماذا يفعل، ولماذا يستحق الانتباه أو لمن يفيد. اعتمد حصراً على البيانات المرفقة ولا تخمّن. اذكر الأرقام المهمة إن وجدت. أرجع كل العناصر بنفس الترتيب."""
+    payload = _call_model(_client(), prompt, "\n\n---\n\n".join(blocks),
+                          "weekly_projects", PROJECT_SCHEMA, 4000, "تلخيص المشاريع")
+    summaries = {x.get("id"): x.get("summary_ar", "") for x in payload.get("items", [])}
+    return [DigestItem(p.name, summaries.get(i, "") or p.description[:220], p.url,
+                       f"{p.source} · {p.metrics}") for i, p in enumerate(projects)]
 
 
 _TOKEN_TOTALS = {"input": 0, "output": 0, "total": 0, "seconds": 0.0}

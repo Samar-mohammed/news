@@ -13,6 +13,20 @@ import config
 from fetcher import canonical_url
 
 STATE_PATH = Path("state") / "seen.json"
+PROJECT_STATE_PATH = Path("state") / "seen-projects.json"
+
+
+def load_seen_projects() -> dict[str, str]:
+    try:
+        raw = json.loads(PROJECT_STATE_PATH.read_text(encoding="utf-8"))
+        return raw if isinstance(raw, dict) else {}
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return {}
+
+
+def save_seen_projects(seen: dict[str, str]) -> None:
+    PROJECT_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    PROJECT_STATE_PATH.write_text(json.dumps(seen, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
 def load_seen() -> dict[str, str]:

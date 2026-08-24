@@ -60,10 +60,20 @@ def render_html(
     intro: str = "",
     warning: str = "",
     coverage: str = "",
+    github_items: list[DigestItem] | None = None,
+    huggingface_items: list[DigestItem] | None = None,
 ) -> str:
     cards = "".join(_render_card(i, item) for i, item in enumerate(items, start=1))
 
     item_count = len(items)
+    github_items = github_items or []
+    huggingface_items = huggingface_items or []
+    def section(title: str, section_items: list[DigestItem]) -> str:
+        if not section_items:
+            return ""
+        section_cards = "".join(_render_card(i, item) for i, item in enumerate(section_items, 1))
+        return f'<h2 style="margin:30px 4px 14px;color:#17203a;font-size:21px;{_RTL}">{_escape(title)}</h2>{section_cards}'
+    project_sections = section("أبرز 5 مشاريع GitHub هذا الأسبوع", github_items) + section("أبرز 5 عناصر من Hugging Face هذا الأسبوع", huggingface_items)
     intro_block = (f"""<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 18px 0;"><tr><td width="4" style="background-color:#6f78f2;border-radius:4px;"></td><td style="padding:2px 16px 2px 0;font-size:15px;line-height:1.95;color:#465064;{_RTL}">{_escape(intro)}</td></tr></table>""" if intro else "")
 
     warning_block = (
@@ -102,7 +112,7 @@ def render_html(
       </td></tr>
       <tr><td style="padding:0 22px 25px 22px;background-color:#f8f9fc;border:1px solid #e0e4ed;border-top:0;border-radius:0 0 20px 20px;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 20px 0;background-color:#ffffff;border-radius:0 0 14px 14px;"><tr><td style="padding:14px 18px;text-align:center;color:#6d7688;font-size:13px;"><strong style="color:#26304b;font-size:16px;">{item_count}</strong>&nbsp; أخبار مختارة بعناية&nbsp;&nbsp; • &nbsp;&nbsp;قراءة سريعة</td></tr></table>
-        {warning_block}{intro_block}{cards}
+        {warning_block}{intro_block}{cards}{project_sections}
         <p style="margin:14px 8px 0 8px;text-align:center;font-size:12px;line-height:1.8;color:#929aab;">صُنعت هذه النشرة لتختصر عليك زحام الأخبار.<br>التلخيص آلي؛ راجع المصدر الأصلي قبل اتخاذ أي قرار.</p>
       </td></tr>
     </table>
@@ -111,7 +121,7 @@ def render_html(
 </html>"""
 
 
-def render_text(items: list[DigestItem], date_label: str, intro: str = "") -> str:
+def render_text(items: list[DigestItem], date_label: str, intro: str = "", github_items: list[DigestItem] | None = None, huggingface_items: list[DigestItem] | None = None) -> str:
     lines = [f"نشرة أخبار الذكاء الاصطناعي - {date_label}", ""]
     if intro:
         lines += [intro, ""]
@@ -120,6 +130,11 @@ def render_text(items: list[DigestItem], date_label: str, intro: str = "") -> st
         if item.summary_ar:
             lines.append(f"   {item.summary_ar}")
         lines += [f"   المصدر: {item.source}", f"   {item.url}", ""]
+    for title, section_items in (("أبرز مشاريع GitHub هذا الأسبوع", github_items or []), ("أبرز عناصر Hugging Face هذا الأسبوع", huggingface_items or [])):
+        if section_items:
+            lines += [title, ""]
+            for index, item in enumerate(section_items, 1):
+                lines += [f"{index}. {item.title_en}", f"   {item.summary_ar}", f"   {item.source}", f"   {item.url}", ""]
     return "\n".join(lines)
 
 

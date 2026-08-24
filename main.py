@@ -25,7 +25,9 @@ from summarizer import (
     log_token_total,
     select_top,
     summarize_selected,
+    summarize_projects,
 )
+from projects import fetch_weekly_projects
 
 FALLBACK_WARNING = (
     "تعذّر التلخيص الآلي هذه المرة، لذا وصلتك العناوين الخام كما هي من المصادر."
@@ -69,17 +71,33 @@ def run(dry_run: bool = False) -> int:
 
     seen = state.load_seen()
     articles, window_hours = fetch_articles(exclude=set(seen))
-    if not articles:
+    weekly = local_now.weekday() == config.WEEKLY_PROJECTS_WEEKDAY
+    project_seen = state.load_seen_projects() if weekly else {}
+    projects, project_warnings = fetch_weekly_projects(set(project_seen)) if weekly else ([], [])
+    if not articles and not projects:
         print("لا توجد أخبار جديدة لم تُرسل من قبل. لن يُرسل إيميل.")
         return 0
-
-    items, intro, warning = build_digest(articles)
+    items, intro, warning = build_digest(articles) if articles else ([], "", "")
+    try:
+        project_items = summarize_projects(projects) if projects else []
+    except SummarizationError as exc:
+        print(f"تحذير: تعذّر تلخيص المشاريع: {exc}", file=sys.stderr)
+        project_items = [
+            DigestItem(p.name, p.description[:220], p.url, f"{p.source} · {p.metrics}")
+            for p in projects
+        ]
+        warning = " ".join(filter(None, (warning, "تعذّر شرح المشاريع آليًا؛ عُرض وصفها الأصلي.")))
+    github_items = [x for x in project_items if x.source.startswith("GitHub")]
+    huggingface_items = [x for x in project_items if x.source.startswith("Hugging Face")]
+    if project_warnings:
+        warning = " ".join(filter(None, (warning, *project_warnings)))
     log_token_total()
 
     coverage = f"تغطية آخر {window_hours} ساعة"
-    html_body = emailer.render_html(items, date_label, intro, warning, coverage)
-    text_body = emailer.render_text(items, date_label, intro)
-    subject = f"نشرة الذكاء الاصطناعي - {local_now:%Y-%m-%d} ({len(items)} أخبار)"
+    html_body = emailer.render_html(items, date_label, intro, warning, coverage, github_items, huggingface_items)
+    text_body = emailer.render_text(items, date_label, intro, github_items, huggingface_items)
+    weekly_label = " + التقرير الأسبوعي" if project_items else ""
+    subject = f"نشرة الذكاء الاصطناعي - {local_now:%Y-%m-%d} ({len(items)} أخبار){weekly_label}"
 
     if dry_run:
         preview = Path("preview.html")
@@ -92,6 +110,8 @@ def run(dry_run: bool = False) -> int:
 
     # الذاكرة تُحدَّث بعد نجاح الإرسال فقط، وإلا ضاعت أخبار لم تصل أصلًا.
     state.save_seen(state.remember([item.url for item in items], seen))
+    if projects:
+        state.save_seen_projects(state.remember([item.url for item in project_items], project_seen))
     return 0
 
 
