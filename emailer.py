@@ -16,40 +16,17 @@ from summarizer import DigestItem
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 465
 
-_FONT_STACK = (
-    "'Segoe UI', Tahoma, 'Noto Naskh Arabic', 'Dubai', Arial, sans-serif"
-)
+_FONT_STACK = "'Segoe UI', Tahoma, 'Noto Naskh Arabic', 'Dubai', Arial, sans-serif"
 
 # محاذاة يمينية صريحة، لأن بعض عملاء البريد يتجاهلون سمة dir على <html>.
 _RTL = "direction:rtl;text-align:right;"
 
 # Gmail يتجاهل وسوم <style> في كثير من الحالات، لذا كل التنسيق سطري.
-_BODY_STYLE = (
-    f"margin:0;padding:24px 12px;background:#f4f5f7;font-family:{_FONT_STACK};{_RTL}"
-)
-_CARD_BASE = (
-    "background:#ffffff;border:1px solid #e4e6eb;border-radius:10px;"
-    "padding:18px 20px;margin:0 0 14px 0;"
-)
-_CARD_STYLE = f"{_CARD_BASE}{_RTL}"
-_HEADER_STYLE = f"{_CARD_BASE}direction:rtl;text-align:center;"
-# العنوان إنجليزي فيبقى ترتيب كلماته ltr، لكن محاذاته يمين ليطابق حافة النص العربي.
-_TITLE_STYLE = (
-    "display:block;direction:ltr;text-align:right;font-size:16px;line-height:1.5;"
-    "font-weight:600;color:#1a4fd6;text-decoration:none;margin:0 0 10px 0;"
-)
-_SUMMARY_STYLE = (
-    f"margin:0 0 12px 0;font-size:15px;line-height:1.9;color:#2b2f36;{_RTL}"
-)
-_SOURCE_STYLE = f"margin:0;font-size:13px;color:#6b7280;{_RTL}"
-_BADGE_STYLE = (
-    "display:inline-block;min-width:22px;padding:1px 7px;margin:0 0 10px 0;"
-    "background:#eef2ff;border-radius:999px;font-size:12px;font-weight:700;"
-    "color:#1a4fd6;text-align:center;"
-)
+_BODY_STYLE = f"margin:0;padding:0;background-color:#eef1f6;font-family:{_FONT_STACK};{_RTL}"
 _WARNING_STYLE = (
-    "background:#fff8e1;border:1px solid #f2d98c;border-radius:10px;"
-    f"padding:14px 20px;margin:0 0 14px 0;font-size:14px;line-height:1.8;color:#7a5c00;{_RTL}"
+    "margin:0 0 16px 0;padding:14px 18px;background-color:#fff8df;"
+    "border:1px solid #f2d47a;border-radius:12px;font-size:14px;line-height:1.8;"
+    f"color:#75570a;{_RTL}"
 )
 
 
@@ -64,12 +41,17 @@ def _escape(text: str) -> str:
 
 def _render_card(index: int, item: DigestItem) -> str:
     return f"""
-      <div style="{_CARD_STYLE}">
-        <span style="{_BADGE_STYLE}">{index}</span>
-        <a href="{_escape(item.url)}" style="{_TITLE_STYLE}">{_escape(item.title_en)}</a>
-        <p style="{_SUMMARY_STYLE}">{_escape(item.summary_ar)}</p>
-        <p style="{_SOURCE_STYLE}">المصدر: {_escape(item.source)}</p>
-      </div>"""
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 14px 0;background-color:#ffffff;border:1px solid #e4e8f0;border-radius:16px;border-collapse:separate;">
+        <tr><td style="padding:22px 22px 20px 22px;{_RTL}">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr>
+            <td valign="middle" style="font-size:12px;color:#7a8496;{_RTL}"><span style="display:inline-block;padding:5px 10px;background-color:#f0f3ff;border-radius:999px;color:#465bd8;font-weight:700;">{_escape(item.source)}</span></td>
+            <td width="42" valign="middle" align="left"><span style="display:inline-block;width:34px;height:34px;line-height:34px;background-color:#5b67e8;border-radius:10px;color:#ffffff;font-size:14px;font-weight:800;text-align:center;">{index:02d}</span></td>
+          </tr></table>
+          <h2 style="margin:16px 0 10px 0;font-size:18px;line-height:1.55;font-weight:750;direction:ltr;text-align:right;"><a href="{_escape(item.url)}" style="color:#17203a;text-decoration:none;">{_escape(item.title_en)}</a></h2>
+          <p style="margin:0 0 17px 0;font-size:15px;line-height:1.95;color:#4d5668;{_RTL}">{_escape(item.summary_ar)}</p>
+          <a href="{_escape(item.url)}" style="display:inline-block;padding:9px 15px;background-color:#eef0ff;border-radius:9px;color:#4655cc;font-size:13px;font-weight:700;text-decoration:none;">اقرأ الخبر&nbsp; ←</a>
+        </td></tr>
+      </table>"""
 
 
 def render_html(
@@ -81,36 +63,41 @@ def render_html(
 ) -> str:
     cards = "".join(_render_card(i, item) for i, item in enumerate(items, start=1))
 
-    intro_block = (
-        f"""<p style="margin:0 4px 18px 4px;font-size:15px;line-height:1.9;color:#3c4149;{_RTL}">{_escape(intro)}</p>"""
-        if intro
+    item_count = len(items)
+    intro_block = (f"""<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 18px 0;"><tr><td width="4" style="background-color:#6f78f2;border-radius:4px;"></td><td style="padding:2px 16px 2px 0;font-size:15px;line-height:1.95;color:#465064;{_RTL}">{_escape(intro)}</td></tr></table>""" if intro else "")
+
+    warning_block = (
+        f"""<p style="{_WARNING_STYLE}">⚠️&nbsp; {_escape(warning)}</p>"""
+        if warning
         else ""
     )
 
-    warning_block = (
-        f"""<p style="{_WARNING_STYLE}">{_escape(warning)}</p>"""
-        if warning
+    coverage_block = (
+        f'<span style="display:inline-block;margin-top:8px;font-size:12px;color:#ffffff !important;" '
+        f'color="#ffffff"><font color="#ffffff" style="color:#ffffff !important;">{_escape(coverage)}</font></span>'
+        if coverage
         else ""
     )
 
     return f"""<!DOCTYPE html>
 <html dir="rtl" lang="ar">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>نشرة أخبار الذكاء الاصطناعي</title></head>
 <body style="{_BODY_STYLE}">
-  <div style="max-width:640px;margin:0 auto;">
-    <div style="{_HEADER_STYLE}">
-      <h1 style="margin:0 0 6px 0;font-size:21px;color:#12141a;">نشرة أخبار الذكاء الاصطناعي</h1>
-      <p style="margin:0;font-size:14px;color:#6b7280;">{_escape(date_label)}</p>
-      {f'<p style="margin:4px 0 0 0;font-size:12px;color:#9099a6;">{_escape(coverage)}</p>' if coverage else ''}
-    </div>
-    {warning_block}
-    {intro_block}
-    {cards}
-    <p style="margin:18px 0 0 0;text-align:center;font-size:12px;line-height:1.8;color:#9099a6;">
-      نشرة آلية تُجمع يوميًا من مصادر تقنية مفتوحة وتُلخَّص آليًا.<br>
-      راجع الرابط الأصلي قبل الاعتماد على أي خبر.
-    </p>
-  </div>
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">أهم {item_count} أخبار في الذكاء الاصطناعي، مختصرة لك بالعربية.</div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#eef1f6;"><tr><td align="center" style="padding:26px 12px;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:660px;">
+      <tr><td style="padding:30px 26px;background-color:#17203a;background-image:linear-gradient(135deg,#17203a 0%,#343b78 100%);border-radius:20px 20px 0 0;text-align:right;direction:rtl;">
+        <span style="display:inline-block;margin:0 0 18px 0;padding:6px 11px;background-color:#303a5c;border:1px solid #59617f;border-radius:999px;color:#dce1ff;font-size:11px;font-weight:700;letter-spacing:.5px;">AI DAILY BRIEF</span>
+        <h1 style="margin:0 0 9px 0;color:#ffffff !important;font-size:27px;line-height:1.35;font-weight:800;" color="#ffffff"><font color="#ffffff" style="color:#ffffff !important;">جرعتك اليومية من أخبار الذكاء الاصطناعي</font></h1>
+        <p style="margin:0;color:#ffffff !important;font-size:14px;line-height:1.7;" color="#ffffff"><font color="#ffffff" style="color:#ffffff !important;">{_escape(date_label)}</font></p>{coverage_block}
+      </td></tr>
+      <tr><td style="padding:0 22px 25px 22px;background-color:#f8f9fc;border:1px solid #e0e4ed;border-top:0;border-radius:0 0 20px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 20px 0;background-color:#ffffff;border-radius:0 0 14px 14px;"><tr><td style="padding:14px 18px;text-align:center;color:#6d7688;font-size:13px;"><strong style="color:#26304b;font-size:16px;">{item_count}</strong>&nbsp; أخبار مختارة بعناية&nbsp;&nbsp; • &nbsp;&nbsp;قراءة سريعة</td></tr></table>
+        {warning_block}{intro_block}{cards}
+        <p style="margin:14px 8px 0 8px;text-align:center;font-size:12px;line-height:1.8;color:#929aab;">صُنعت هذه النشرة لتختصر عليك زحام الأخبار.<br>التلخيص آلي؛ راجع المصدر الأصلي قبل اتخاذ أي قرار.</p>
+      </td></tr>
+    </table>
+  </td></tr></table>
 </body>
 </html>"""
 

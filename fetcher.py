@@ -155,13 +155,12 @@ def fetch_articles(
 ) -> tuple[list[Article], int]:
     """يرجع (الأخبار، عدد ساعات النافذة المستخدمة فعليًا)، بدون تكرار، الأحدث أولًا.
 
-    exclude هي روابط موحّدة سبق إرسالها، تُستبعد قبل حساب النافذة حتى تتوسع
-    النافذة بحثًا عن أخبار جديدة فعلًا لا عن أخبار قديمة مُرسلة.
+    exclude هي روابط موحّدة سبق إرسالها، وتُستبعد حتى لا تتكرر الأخبار.
     """
     now = now or datetime.now(timezone.utc)
-    hard_cutoff = now - timedelta(hours=config.MAX_LOOKBACK_HOURS)
+    hard_cutoff = now - timedelta(hours=config.LOOKBACK_HOURS)
 
-    print(f"سحب {len(config.FEEDS)} مصدر (آخر {config.MAX_LOOKBACK_HOURS} ساعة)...")
+    print(f"سحب {len(config.FEEDS)} مصدر (آخر {config.LOOKBACK_HOURS} ساعة)...")
     with ThreadPoolExecutor(max_workers=len(config.FEEDS)) as pool:
         results = pool.map(
             lambda feed: _fetch_one(feed[0], feed[1], hard_cutoff), config.FEEDS
@@ -179,13 +178,7 @@ def fetch_articles(
             print(f"استُبعد {before - len(unique)} خبرًا سبق إرساله في نشرة سابقة")
 
     window = config.LOOKBACK_HOURS
-    while True:
-        selected = [a for a in unique if a.age_hours(now) <= window]
-        if len(selected) >= config.MIN_ARTICLES or window >= config.MAX_LOOKBACK_HOURS:
-            break
-        window = min(window + 24, config.MAX_LOOKBACK_HOURS)
-        print(f"أخبار قليلة، توسيع النافذة إلى {window} ساعة...")
-
+    selected = [a for a in unique if a.age_hours(now) <= window]
     selected = _cap_per_feed(selected)
     print(f"المختار: {len(selected)} خبر ضمن آخر {window} ساعة")
     return selected[: config.MAX_ENTRIES_TO_MODEL], window

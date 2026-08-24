@@ -20,10 +20,10 @@ SELECT_PROMPT = """أنت محرر نشرة أخبار متخصص في الذك�
 
 ستصلك قائمة أخبار خام من مصادر مختلفة، كل خبر له رقم id.
 
-مهمتك اختيار أهم {target} خبرًا:
+مهمتك اختيار كل الأخبار الجيدة والمرتبطة فعليًا بالذكاء الاصطناعي:
 1. استبعد الأخبار المكررة التي تغطي نفس الحدث، واحتفظ بالنسخة الأوضح فقط.
 2. استبعد المحتوى الترويجي والإعلانات وقوائم العروض والمقالات غير المرتبطة فعليًا بالذكاء الاصطناعي.
-3. إن لم يتوفر هذا العدد من الأخبار الجيدة، أرجع ما هو متاح فقط ولا تُكمل العدد بمحتوى ضعيف.
+3. لا يوجد عدد مستهدف أو حد أدنى؛ أرجع كل ما يستحق الإرسال مهما كان العدد قليلًا.
 
 معايير الأهمية: إطلاق نماذج أو منتجات كبيرة، نتائج بحثية مؤثرة، تحركات تنظيمية وقانونية، صفقات واستحواذات كبرى، ثم ما دون ذلك.
 
@@ -140,6 +140,7 @@ def _call_model(
     schema: dict,
     max_output_tokens: int,
     label: str,
+    reasoning_effort: str = "low",
 ) -> dict:
     started = time.monotonic()
     try:
@@ -157,7 +158,7 @@ def _call_model(
                     "schema": schema,
                 }
             },
-            reasoning={"effort": "low"},
+            reasoning={"effort": reasoning_effort},
             max_output_tokens=max_output_tokens,
         )
     except Exception as exc:
@@ -192,12 +193,13 @@ def select_top(articles: list[Article]) -> list[Article]:
 
     payload = _call_model(
         _client(),
-        SELECT_PROMPT.format(target=config.TARGET_ITEMS),
+        SELECT_PROMPT,
         "\n\n---\n\n".join(blocks),
         "ai_news_selection",
         SELECT_SCHEMA,
         2000,
         "الاختيار",
+        "minimal",
     )
 
     selected: list[Article] = []
@@ -210,7 +212,7 @@ def select_top(articles: list[Article]) -> list[Article]:
     if not selected:
         raise SummarizationError("النموذج لم يختر أي خبر صالح")
     print(f"اختير {len(selected)} خبر")
-    return selected[: config.TARGET_ITEMS]
+    return selected
 
 
 def summarize_selected(

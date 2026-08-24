@@ -41,7 +41,7 @@ def _fallback_items(articles: list[Article]) -> list[DigestItem]:
             url=article.url,
             source=article.source,
         )
-        for article in articles[: config.TARGET_ITEMS * 2]
+        for article in articles
     ]
 
 
