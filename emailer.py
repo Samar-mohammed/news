@@ -81,15 +81,24 @@ def render_html(
 
     return f"""<!DOCTYPE html>
 <html dir="rtl" lang="ar">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>نشرة أخبار الذكاء الاصطناعي</title></head>
-<body style="{_BODY_STYLE}">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>نشرة أخبار الذكاء الاصطناعي</title>
+  <style>
+    /* يمنع Gmail على iOS من تحويل النص الأبيض إلى أسود في الوضع الداكن. */
+    u + .email-body .gmail-blend-screen {{ background:#000;mix-blend-mode:screen; }}
+    u + .email-body .gmail-blend-difference {{ background:#000;mix-blend-mode:difference; }}
+  </style>
+</head>
+<body class="email-body" style="{_BODY_STYLE}">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">أهم {item_count} أخبار في الذكاء الاصطناعي، مختصرة لك بالعربية.</div>
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#eef1f6;"><tr><td align="center" style="padding:26px 12px;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:660px;">
       <tr><td style="padding:30px 26px;background-color:#17203a;background-image:linear-gradient(135deg,#17203a 0%,#343b78 100%);border-radius:20px 20px 0 0;text-align:right;direction:rtl;">
         <span style="display:inline-block;margin:0 0 18px 0;padding:6px 11px;background-color:#303a5c;border:1px solid #59617f;border-radius:999px;color:#dce1ff;font-size:11px;font-weight:700;letter-spacing:.5px;">AI DAILY BRIEF</span>
-        <h1 style="margin:0 0 9px 0;color:#ffffff !important;font-size:27px;line-height:1.35;font-weight:800;" color="#ffffff"><font color="#ffffff" style="color:#ffffff !important;">جرعتك اليومية من أخبار الذكاء الاصطناعي</font></h1>
-        <p style="margin:0;color:#ffffff !important;font-size:14px;line-height:1.7;" color="#ffffff"><font color="#ffffff" style="color:#ffffff !important;">{_escape(date_label)}</font></p>{coverage_block}
+        <div class="gmail-blend-screen"><div class="gmail-blend-difference" style="color:#ffffff !important;">
+          <h1 style="margin:0 0 9px 0;color:#ffffff !important;font-size:27px;line-height:1.35;font-weight:800;" color="#ffffff"><font color="#ffffff" style="color:#ffffff !important;">جرعتك اليومية من أخبار الذكاء الاصطناعي</font></h1>
+          <p style="margin:0;color:#ffffff !important;font-size:14px;line-height:1.7;" color="#ffffff"><font color="#ffffff" style="color:#ffffff !important;">{_escape(date_label)}</font></p>{coverage_block}
+        </div></div>
       </td></tr>
       <tr><td style="padding:0 22px 25px 22px;background-color:#f8f9fc;border:1px solid #e0e4ed;border-top:0;border-radius:0 0 20px 20px;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 20px 0;background-color:#ffffff;border-radius:0 0 14px 14px;"><tr><td style="padding:14px 18px;text-align:center;color:#6d7688;font-size:13px;"><strong style="color:#26304b;font-size:16px;">{item_count}</strong>&nbsp; أخبار مختارة بعناية&nbsp;&nbsp; • &nbsp;&nbsp;قراءة سريعة</td></tr></table>
