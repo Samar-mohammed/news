@@ -95,7 +95,7 @@ def run(dry_run: bool = False, force_weekly: bool = False) -> int:
     html_body = emailer.render_html(items, intro, warning, github_items, huggingface_items, product_hunt_items)
     text_body = emailer.render_text(items, intro, github_items, huggingface_items, product_hunt_items)
     weekly_label = " + التقرير الأسبوعي" if project_items else ""
-    subject = f"أهم أخبار الذكاء الاصطناعي{weekly_label}"
+    subject = f"AI Daily Brief | أهم أخبار الذكاء الاصطناعي اليوم{weekly_label}"
 
     if dry_run:
         preview = Path("preview.html")
