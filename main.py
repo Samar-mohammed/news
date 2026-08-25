@@ -67,10 +67,8 @@ def run(dry_run: bool = False, force_weekly: bool = False) -> int:
     local_now = datetime.now(timezone.utc) + timedelta(
         hours=config.DISPLAY_TIMEZONE_OFFSET_HOURS
     )
-    date_label = emailer.format_date_label(local_now, config.DISPLAY_TIMEZONE_LABEL)
-
     seen = state.load_seen()
-    articles, window_hours = fetch_articles(exclude=set(seen))
+    articles, _window_hours = fetch_articles(exclude=set(seen))
     weekly = force_weekly or local_now.weekday() == config.WEEKLY_PROJECTS_WEEKDAY
     project_seen = state.load_seen_projects() if weekly else {}
     projects, project_warnings = fetch_weekly_projects(set(project_seen)) if weekly else ([], [])
@@ -94,11 +92,10 @@ def run(dry_run: bool = False, force_weekly: bool = False) -> int:
         warning = " ".join(filter(None, (warning, *project_warnings)))
     log_token_total()
 
-    coverage = f"تغطية آخر {window_hours} ساعة"
-    html_body = emailer.render_html(items, date_label, intro, warning, coverage, github_items, huggingface_items, product_hunt_items)
-    text_body = emailer.render_text(items, date_label, intro, github_items, huggingface_items, product_hunt_items)
+    html_body = emailer.render_html(items, intro, warning, github_items, huggingface_items, product_hunt_items)
+    text_body = emailer.render_text(items, intro, github_items, huggingface_items, product_hunt_items)
     weekly_label = " + التقرير الأسبوعي" if project_items else ""
-    subject = f"نشرة الذكاء الاصطناعي - {local_now:%Y-%m-%d} ({len(items)} أخبار){weekly_label}"
+    subject = f"أهم أخبار الذكاء الاصطناعي{weekly_label}"
 
     if dry_run:
         preview = Path("preview.html")

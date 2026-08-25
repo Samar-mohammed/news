@@ -56,10 +56,8 @@ def _render_card(index: int, item: DigestItem) -> str:
 
 def render_html(
     items: list[DigestItem],
-    date_label: str,
     intro: str = "",
     warning: str = "",
-    coverage: str = "",
     github_items: list[DigestItem] | None = None,
     huggingface_items: list[DigestItem] | None = None,
     product_hunt_items: list[DigestItem] | None = None,
@@ -86,13 +84,6 @@ def render_html(
         else ""
     )
 
-    coverage_block = (
-        f'<span style="display:inline-block;margin-top:8px;font-size:12px;color:#ffffff !important;" '
-        f'color="#ffffff"><font color="#ffffff" style="color:#ffffff !important;">{_escape(coverage)}</font></span>'
-        if coverage
-        else ""
-    )
-
     return f"""<!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
@@ -107,15 +98,16 @@ def render_html(
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">أهم {item_count} أخبار في الذكاء الاصطناعي، مختصرة لك بالعربية.</div>
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#eef1f6;"><tr><td align="center" style="padding:26px 12px;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:660px;">
-      <tr><td style="padding:30px 26px;background-color:#17203a;background-image:linear-gradient(135deg,#17203a 0%,#343b78 100%);border-radius:20px 20px 0 0;text-align:right;direction:rtl;">
-        <span style="display:inline-block;margin:0 0 18px 0;padding:6px 11px;background-color:#303a5c;border:1px solid #59617f;border-radius:999px;color:#dce1ff;font-size:11px;font-weight:700;letter-spacing:.5px;">AI DAILY BRIEF</span>
+      <tr><td style="padding:32px 28px 28px;background-color:#17203a;background-image:linear-gradient(135deg,#17203a 0%,#343b78 100%);border-radius:20px 20px 0 0;text-align:right;direction:rtl;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 18px 0;"><tr>
+          <td align="right"><span style="display:inline-block;padding:6px 11px;background-color:#303a5c;border:1px solid #59617f;border-radius:999px;color:#dce1ff;font-size:11px;font-weight:700;letter-spacing:.5px;">AI DAILY BRIEF</span></td>
+          <td align="left"><span style="display:inline-block;padding:6px 11px;background-color:#303a5c;border:1px solid #59617f;border-radius:999px;color:#dce1ff;font-size:11px;font-weight:700;letter-spacing:.5px;">{item_count} أخبار مختارة</span></td>
+        </tr></table>
         <div class="gmail-blend-screen"><div class="gmail-blend-difference" style="color:#ffffff !important;">
-          <h1 style="margin:0 0 9px 0;color:#ffffff !important;font-size:27px;line-height:1.35;font-weight:800;" color="#ffffff"><font color="#ffffff" style="color:#ffffff !important;">جرعتك اليومية من أخبار الذكاء الاصطناعي</font></h1>
-          <p style="margin:0;color:#ffffff !important;font-size:14px;line-height:1.7;" color="#ffffff"><font color="#ffffff" style="color:#ffffff !important;">{_escape(date_label)}</font></p>{coverage_block}
+          <h1 style="margin:0;color:#ffffff !important;font-size:27px;line-height:1.35;font-weight:800;" color="#ffffff"><font color="#ffffff" style="color:#ffffff !important;">جرعتك اليومية من أخبار الذكاء الاصطناعي</font></h1>
         </div></div>
       </td></tr>
-      <tr><td style="padding:0 22px 25px 22px;background-color:#f8f9fc;border:1px solid #e0e4ed;border-top:0;border-radius:0 0 20px 20px;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 20px 0;background-color:#ffffff;border-radius:0 0 14px 14px;"><tr><td style="padding:14px 18px;text-align:center;color:#6d7688;font-size:13px;"><strong style="color:#26304b;font-size:16px;">{item_count}</strong>&nbsp; أخبار مختارة بعناية&nbsp;&nbsp; • &nbsp;&nbsp;قراءة سريعة</td></tr></table>
+      <tr><td style="padding:24px 22px 25px 22px;background-color:#f8f9fc;border:1px solid #e0e4ed;border-top:0;border-radius:0 0 20px 20px;">
         {warning_block}{intro_block}{cards}{project_sections}
         <p style="margin:14px 8px 0 8px;text-align:center;font-size:12px;line-height:1.8;color:#929aab;">صُنعت هذه النشرة لتختصر عليك زحام الأخبار.<br>التلخيص آلي؛ راجع المصدر الأصلي قبل اتخاذ أي قرار.</p>
       </td></tr>
@@ -125,8 +117,8 @@ def render_html(
 </html>"""
 
 
-def render_text(items: list[DigestItem], date_label: str, intro: str = "", github_items: list[DigestItem] | None = None, huggingface_items: list[DigestItem] | None = None, product_hunt_items: list[DigestItem] | None = None) -> str:
-    lines = [f"نشرة أخبار الذكاء الاصطناعي - {date_label}", ""]
+def render_text(items: list[DigestItem], intro: str = "", github_items: list[DigestItem] | None = None, huggingface_items: list[DigestItem] | None = None, product_hunt_items: list[DigestItem] | None = None) -> str:
+    lines = ["نشرة أخبار الذكاء الاصطناعي", ""]
     if intro:
         lines += [intro, ""]
     for index, item in enumerate(items, start=1):
