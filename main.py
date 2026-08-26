@@ -43,7 +43,7 @@ def _fallback_items(articles: list[Article]) -> list[DigestItem]:
             url=article.url,
             source=article.source,
         )
-        for article in articles
+        for article in articles[: config.TARGET_ITEMS]
     ]
 
 
@@ -54,7 +54,7 @@ def build_digest(articles: list[Article]) -> tuple[list[DigestItem], str, str]:
         selected = select_top(articles)
         full_texts = fetch_full_texts(selected)
         intro, items = summarize_selected(selected, full_texts)
-        return items, intro, ""
+        return items[: config.TARGET_ITEMS], intro, ""
     except SummarizationError as exc:
         print(f"تحذير: {exc}", file=sys.stderr)
         print("التحويل إلى النشرة الاحتياطية بالعناوين الخام...", file=sys.stderr)
