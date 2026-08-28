@@ -2,14 +2,20 @@ name: نشرة أخبار الذكاء الاصطناعي
 
 on:
   schedule:
-    # 05:00 UTC = 8:00 صباحًا بتوقيت الرياض. قد تتأخر الجدولة 5-20 دقيقة في أوقات الذروة.
-    - cron: "0 5 * * *"
+    # ثلاث محاولات في دقائق بعيدة عن بداية الساعة لتقليل أثر تأخير/إسقاط جدولة GitHub.
+    # علامة الإرسال اليومية داخل state تمنع وصول أكثر من نشرة واحدة.
+    - cron: "17 5 * * *" # 08:17 بتوقيت الرياض
+    - cron: "17 6 * * *" # 09:17 بتوقيت الرياض
+    - cron: "17 7 * * *" # 10:17 بتوقيت الرياض
   workflow_dispatch:
 
 jobs:
   send-digest:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    concurrency:
+      group: daily-news-digest
+      cancel-in-progress: false
 
     steps:
       - uses: actions/checkout@v7

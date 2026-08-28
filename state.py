@@ -14,6 +14,29 @@ from fetcher import canonical_url
 
 STATE_PATH = Path("state") / "seen.json"
 PROJECT_STATE_PATH = Path("state") / "seen-projects.json"
+LAST_DIGEST_PATH = Path("state") / "last-digest.json"
+
+
+def was_digest_sent(local_date: str) -> bool:
+    """يتحقق هل أُرسلت نشرة في هذا التاريخ المحلي بالفعل."""
+    try:
+        raw = json.loads(LAST_DIGEST_PATH.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return False
+    return isinstance(raw, dict) and raw.get("local_date") == local_date
+
+
+def mark_digest_sent(local_date: str) -> None:
+    """يسجل نجاح الإرسال لمنع محاولات الجدولة اللاحقة من التكرار."""
+    LAST_DIGEST_PATH.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "local_date": local_date,
+        "sent_at_utc": datetime.now(timezone.utc).isoformat(),
+    }
+    LAST_DIGEST_PATH.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8"
+    )
+    print(f"سُجّل إرسال نشرة {local_date}")
 
 
 def load_seen_projects() -> dict[str, str]:

@@ -67,6 +67,11 @@ def run(dry_run: bool = False, force_weekly: bool = False) -> int:
     local_now = datetime.now(timezone.utc) + timedelta(
         hours=config.DISPLAY_TIMEZONE_OFFSET_HOURS
     )
+    local_date = local_now.date().isoformat()
+    if not dry_run and state.was_digest_sent(local_date):
+        print(f"أُرسلت نشرة {local_date} بالفعل؛ لن تتكرر في محاولة الجدولة الحالية.")
+        return 0
+
     seen = state.load_seen()
     articles, _window_hours = fetch_articles(exclude=set(seen))
     weekly = force_weekly or local_now.weekday() == config.WEEKLY_PROJECTS_WEEKDAY
@@ -105,6 +110,7 @@ def run(dry_run: bool = False, force_weekly: bool = False) -> int:
         return 0
 
     emailer.send_email(subject, html_body, text_body)
+    state.mark_digest_sent(local_date)
 
     # الذاكرة تُحدَّث بعد نجاح الإرسال فقط، وإلا ضاعت أخبار لم تصل أصلًا.
     state.save_seen(state.remember([item.url for item in items], seen))
