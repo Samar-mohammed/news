@@ -1,60 +1,56 @@
-# نشرة أخبار الذكاء الاصطناعي اليومية
+# Daily AI News Digest
 
-أوتوميشن يجمع أخبار الذكاء الاصطناعي من ٨ مصادر RSS، يفلتر المكرر والضعيف، يلخص أهم الأخبار بالعربية عبر `gpt-5-mini`، ويرسلها إيميلًا منسّقًا كل صباح عبر Gmail. مجدول على GitHub Actions فلا يحتاج جهازك أن يكون شغالًا.
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
+![OpenAI](https://img.shields.io/badge/LLM-gpt--5--mini-412991?logo=openai&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/Scheduled-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
-## كيف يعمل
+Collects AI news from 8 RSS sources, filters out duplicates and low-quality items, summarizes the top stories in Arabic via `gpt-5-mini`, and emails a formatted digest every morning through Gmail. Scheduled on GitHub Actions, so your machine doesn't need to be running.
+
+## How it works
 
 ```
-مصادر RSS  →  فلترة زمنية + إزالة المكرر + استبعاد ما أُرسل سابقًا
-          →  اختيار الأهم  →  جلب نص المقالات المختارة  →  تلخيص بالعربي  →  إيميل HTML
+RSS sources  →  time-window filter + dedup + exclude previously sent
+             →  pick the most important  →  fetch full text of selected articles  →  summarize in Arabic  →  HTML email
 ```
 
-العنوان يبقى بالإنجليزية كرابط للمصدر الأصلي، وتحته ملخص عربي في جملتين: ما حدث، ولماذا يهم.
+Each headline stays in English as a link to the original source, with a two-sentence Arabic summary underneath: what happened, and why it matters.
 
-**النافذة الزمنية ثابتة.** النشرة تجمع الأخبار الجديدة المنشورة خلال آخر ٢٦ ساعة، وتعرض أهم ١٠ أخبار كحد أقصى دون حد أدنى. لذلك قد تكون النشرة أقصر في الأيام الهادئة.
+- **Fixed time window** — collects items published in the last 26 hours and shows up to 10 top stories with no minimum, so the digest may be shorter on quiet days.
+- **No repeats** — sent links are saved to `state/seen.json`, excluded from future runs, and expire after `SEEN_RETENTION_DAYS` days. Updated only after a successful send, not in preview mode.
+- **Automatic retry** — GitHub Actions retries at 8:17, 9:17, and 10:17 AM Riyadh time to work around scheduling delays. A marker in `state/last-digest.json` stops later attempts once one send succeeds, so you never get duplicates.
+- **Full-article summaries** — a cheap first pass picks the top stories from titles/excerpts, then only those articles' full text is fetched (`trafilatura`) and summarized with full context, giving specific numbers and names instead of generic summaries. A failed fetch (paywall/blocking) just falls back to the RSS excerpt for that story.
 
-**ذاكرة تمنع تكرار الأخبار.** تُحفظ روابط ما أُرسل في `state/seen.json` وتُستبعد في التشغيلات التالية، فتصلك أخبار جديدة فعلًا. الروابط تُحذف تلقائيًا بعد `SEEN_RETENTION_DAYS` يومًا، والذاكرة تُحدَّث بعد نجاح الإرسال فقط لا في وضع المعاينة.
-
-**إعادة محاولة يومية تلقائية.** يحاول GitHub Actions التشغيل عند ٨:١٧ و٩:١٧ و١٠:١٧ صباحًا بتوقيت الرياض لتجاوز تأخير الجدولة. بعد أول إرسال ناجح تُحفظ علامة في `state/last-digest.json`، فتتوقف المحاولات اللاحقة دون إرسال نسخة مكررة.
-
-**تلخيص من نص المقال الكامل.** مقتطف RSS أحيانًا سطر واحد أو اقتباس مبتور، فيخرج الملخص سطحيًا. لذا العملية على مرحلتين: النموذج يختار أهم الأخبار من العناوين والمقتطفات (رخيص)، ثم يُجلب نص المقالات المختارة فقط عبر `trafilatura` وتُلخَّص بسياق كامل. الفرق ملموس: الملخص صار يذكر أرقامًا وأسماء محددة بدل العموميات. أي مقال يفشل جلبه (جدار دفع أو حجب) يعود تلقائيًا لمقتطف RSS دون أن تتعطل النشرة.
-
-## المصادر
+## Sources
 
 TechCrunch AI · The Verge AI · Ars Technica AI · Wired AI · OpenAI Blog · Google DeepMind · Hugging Face · MIT News AI
 
-لتعديل القائمة، عدّل `FEEDS` في [config.py](config.py).
+Edit the list via `FEEDS` in [config.py](config.py).
 
-## تقرير المشاريع الأسبوعي
+## Weekly projects report
 
-في تشغيل يوم الجمعة بتوقيت الرياض، تُضاف إلى نفس رسالة الأخبار أقسام لأبرز 5 مستودعات GitHub المرتبطة بالذكاء الاصطناعي والمنشأة خلال آخر 7 أيام والمرتبة بالنجوم، وأبرز 3 عناصر رائجة من Hugging Face، وأفضل 5 منتجات AI من Product Hunt. يشرح النموذج كل عنصر بالعربية، وتُحفظ روابط العناصر المرسلة لمنع تكرارها.
+On the Friday run (Riyadh time), the email also includes the top 5 AI-related GitHub repos created in the last 7 days (by stars), the top 3 trending Hugging Face items (one Model, one Dataset, one Space — preferring original weights over GGUF/MLX/FP8 variants, and skipping repeat model families), and the top 5 AI products from Product Hunt (by votes, Artificial Intelligence topic only). The model explains each item in Arabic; sent items are remembered to avoid repeats.
 
-نتائج Hugging Face موزعة إلى Model واحد، وDataset واحدة، وSpace واحدة. تُفضّل النسخة الأصلية على نسخ GGUF وMLX وFP8 والنسخ المعدلة، كما تُحفظ عائلة النموذج لمنع ظهور نسخة أخرى منها في تقرير لاحق.
+GitHub and Hugging Face fetching works without keys, but adding `GITHUB_TOKEN` and `HF_TOKEN` (locally in `.env`, and as GitHub Actions secrets) raises rate limits. Product Hunt requires a `PRODUCT_HUNT_TOKEN` from the [Product Hunt API Dashboard](https://www.producthunt.com/v2/oauth/applications). Day, counts, and lookback window are configurable via `WEEKLY_PROJECTS_*`, `GITHUB_PROJECT_COUNT`, `HUGGINGFACE_PROJECT_COUNT`, `PRODUCT_HUNT_COUNT`, and `PROJECT_LOOKBACK_DAYS` in [config.py](config.py).
 
-يضاف كذلك قسم لأبرز 5 منتجات AI أسبوعية من Product Hunt، مرتبة بعدد الأصوات ومحصورة في موضوع Artificial Intelligence. يتطلب هذا القسم Developer Token باسم `PRODUCT_HUNT_TOKEN` من [Product Hunt API Dashboard](https://www.producthunt.com/v2/oauth/applications).
+## Setup
 
-يعمل جلب GitHub وHugging Face العام دون مفاتيح إضافية، لكن يُنصح بإضافة `GITHUB_TOKEN` و`HF_TOKEN` إلى ملف `.env` محليًا وإلى GitHub Actions Secrets لرفع حدود الطلبات وتحسين الاستقرار. يحتاج Product Hunt إلى `PRODUCT_HUNT_TOKEN`. يمكن تغيير اليوم والأعداد والنافذة الزمنية من إعدادات `WEEKLY_PROJECTS_*` و`GITHUB_PROJECT_COUNT` و`HUGGINGFACE_PROJECT_COUNT` و`PRODUCT_HUNT_COUNT` و`PROJECT_LOOKBACK_DAYS` في [config.py](config.py).
+### 1. Gmail app password
 
-## الإعداد
+Your regular Gmail password **will not work** — you need an App Password:
 
-### ١. كلمة مرور تطبيق Gmail
+1. Enable 2-step verification at [myaccount.google.com/security](https://myaccount.google.com/security).
+2. Open [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
+3. Create a new password named e.g. `News Automation`.
+4. Copy the 16 characters, removing the spaces.
 
-كلمة مرور Gmail العادية **لن تعمل**، تحتاج App Password:
+If the App Passwords page doesn't show up, 2-step verification is probably off, or it's a work/organization account where an admin blocks it.
 
-1. فعّل التحقق بخطوتين على حسابك من [myaccount.google.com/security](https://myaccount.google.com/security).
-2. افتح [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
-3. أنشئ كلمة مرور جديدة باسم مثل `News Automation`.
-4. انسخ الـ ١٦ حرفًا واحذف المسافات بينها.
+### 2. OpenAI key
 
-إن لم تظهر لك صفحة App Passwords، فالسبب عادة أن التحقق بخطوتين غير مفعّل، أو أن الحساب حساب مؤسسة/عمل يمنعها المسؤول.
+Get one from [platform.openai.com/api-keys](https://platform.openai.com/api-keys) and make sure the account has credit. Expected cost is under $1/month with `gpt-5-mini`.
 
-### ٢. مفتاح OpenAI
-
-من [platform.openai.com/api-keys](https://platform.openai.com/api-keys). تأكد أن في الحساب رصيدًا. التكلفة المتوقعة أقل من دولار في الشهر مع `gpt-5-mini`.
-
-### ٣. التشغيل المحلي للاختبار
-
-من مجلد المشروع في PowerShell:
+### 3. Local test run
 
 ```powershell
 py -3 -m venv .venv
@@ -62,21 +58,21 @@ py -3 -m venv .venv
 Copy-Item .env.example .env
 ```
 
-افتح `.env` واملأ القيم الأربع، ثم عاين النشرة بدون إرسال:
+Fill in `.env`, then preview without sending:
 
 ```powershell
 .\.venv\Scripts\python.exe main.py --dry-run
 ```
 
-هذا ينشئ `preview.html` يمكنك فتحه في المتصفح. إذا أعجبك الشكل، أرسل فعليًا:
+This creates `preview.html` to open in your browser. If it looks good, send for real:
 
 ```powershell
 .\.venv\Scripts\python.exe main.py
 ```
 
-### ٤. الجدولة على GitHub Actions
+### 4. Scheduling on GitHub Actions
 
-1. أنشئ مستودعًا **خاصًا (Private)** على GitHub وارفع المشروع:
+1. Create a **private** GitHub repo and push the project (`.env` is gitignored — double-check before pushing):
 
 ```powershell
 git init
@@ -87,80 +83,49 @@ git remote add origin https://github.com/USERNAME/REPO.git
 git push -u origin main
 ```
 
-ملف `.env` مستثنى في `.gitignore` فلن يُرفع. تأكد من ذلك بنفسك قبل الدفع.
+2. In `Settings → Secrets and variables → Actions`, add these repository secrets:
 
-2. في المستودع، اذهب إلى `Settings` ثم `Secrets and variables` ثم `Actions`، وأضف عبر `New repository secret` هذه الأسرار الأربعة:
-
-| السر | القيمة |
+| Secret | Value |
 | --- | --- |
-| `GMAIL_USER` | إيميل Gmail المُرسِل |
-| `GMAIL_APP_PASSWORD` | كلمة مرور التطبيق (١٦ حرفًا) |
-| `MAIL_TO` | الإيميل المستقبِل، أو عدة عناوين مفصولة بفاصلة |
-| `OPENAI_API_KEY` | مفتاح OpenAI |
+| `GMAIL_USER` | Sender Gmail address |
+| `GMAIL_APP_PASSWORD` | App password (16 characters) |
+| `MAIL_TO` | Recipient email(s), comma-separated |
+| `OPENAI_API_KEY` | OpenAI key |
 
-3. من تبويب `Actions` اختر `نشرة أخبار الذكاء الاصطناعي` ثم `Run workflow` لتجربة فورية بدون انتظار الموعد.
+3. From the `Actions` tab, select `AI News Digest → Run workflow` to test immediately.
 
-## قراءة سجل التشغيل
+The same log (per-stage token usage) is visible under `Actions → any run → Send digest`. To reduce reasoning-token usage, change `reasoning.effort` from `low` to `minimal` in [summarizer.py](summarizer.py).
 
-كل تشغيلة تطبع استهلاك كل مرحلة ثم المجموع:
+## Send time
 
-```
-المرحلة 1: اختيار الأهم من 13 خبر...
-  الاختيار: 1073 إدخال (منها 1024 مخزّن) + 420 إخراج (منها 384 تفكير) في 22.5 ثانية
-جلب النص الكامل لـ 7 مقال...
-نجح استخراج 7 من 7 مقال
-المرحلة 2: تلخيص 7 خبر بالعربي...
-  التلخيص: 4849 إدخال (منها 0 مخزّن) + 1179 إخراج (منها 384 تفكير) في 13.9 ثانية
---- توكنات gpt-5-mini ---
-  الإدخال:    5922
-  الإخراج:    1599
-  الإجمالي:   7521 توكن في 36.3 ثانية
-```
+Default is 8:00 AM Riyadh time. To change it, edit `cron` in [.github/workflows/daily-news.yml](.github/workflows/daily-news.yml) — values are UTC (Riyadh time minus 3 hours):
 
-مرحلة الاختيار رخيصة لأنها ترى العناوين فقط، ومرحلة التلخيص أثقل لأنها ترى نص المقالات. المجموع حوالي **٧٥٠٠ توكن للتشغيلة**.
-
-**المخزّن مؤقتًا** هو الجزء المكرر من التعليمات الذي تعيد OpenAI استخدامه، ويظهر فقط عند تكرار التشغيل خلال دقائق. في التشغيل اليومي المجدول يكون صفرًا غالبًا.
-
-**توكن التفكير** جزء من الإخراج، وهو ما يستخدمه النموذج داخليًا قبل صياغة الإجابة. لتقليله غيّر `reasoning.effort` في [summarizer.py](summarizer.py) من `low` إلى `minimal`.
-
-على GitHub Actions تجد نفس السجل في تبويب `Actions` بالضغط على أي تشغيلة ثم خطوة `إرسال النشرة`.
-
-## وقت الإرسال
-
-الافتراضي ٨:٠٠ صباحًا بتوقيت الرياض. لتغييره، عدّل `cron` في [.github/workflows/daily-news.yml](.github/workflows/daily-news.yml). القيمة بتوقيت UTC، فاطرح ٣ ساعات من الوقت الذي تريده:
-
-| الوقت في الرياض | قيمة cron |
+| Riyadh time | cron value |
 | --- | --- |
-| ٦:٠٠ ص | `0 3 * * *` |
-| ٨:٠٠ ص | `0 5 * * *` |
-| ٩:٠٠ م | `0 18 * * *` |
+| 6:00 AM | `0 3 * * *` |
+| 8:00 AM | `0 5 * * *` |
+| 9:00 PM | `0 18 * * *` |
 
-جدولة GitHub Actions قد تتأخر ٥-٢٠ دقيقة في أوقات الذروة، وهذا سلوك طبيعي لا يعني وجود خطأ.
+A 5-20 minute delay at peak times is normal GitHub Actions behavior, not an error.
 
-## إعدادات أخرى قابلة للتعديل
+## Other configurable settings
 
-كلها في [config.py](config.py):
+All in [config.py](config.py):
 
-| الإعداد | الوصف | الافتراضي |
+| Setting | Description | Default |
 | --- | --- | --- |
-| `LOOKBACK_HOURS` | النافذة الزمنية المفضّلة بالساعات | `26` |
-| `MAX_ENTRIES_TO_MODEL` | حد أقصى للأخبار المرسلة للنموذج | `40` |
-| `SEEN_RETENTION_DAYS` | مدة تذكّر الأخبار المرسلة | `30` |
-| `MAX_ARTICLE_CHARS` | أقصى طول نص مقال يُرسل للنموذج | `4000` |
-| `OPENAI_MODEL` | النموذج المستخدم | `gpt-5-mini` |
+| `LOOKBACK_HOURS` | Preferred time window, in hours | `26` |
+| `MAX_ENTRIES_TO_MODEL` | Max number of stories sent to the model | `40` |
+| `SEEN_RETENTION_DAYS` | How long sent stories are remembered | `30` |
+| `MAX_ARTICLE_CHARS` | Max article text length sent to the model | `4000` |
+| `OPENAI_MODEL` | Model used | `gpt-5-mini` |
 
-## حل المشاكل
+## Troubleshooting
 
-**`Username and Password not accepted`** — تستخدم كلمة مرور Gmail العادية بدل App Password، أو أن في كلمة المرور مسافات لم تُحذف.
-
-**وصل الإيميل بعناوين خام وتحذير أصفر** — استدعاء OpenAI فشل، والسكربت رجع للنشرة الاحتياطية. السبب غالبًا نفاد الرصيد أو مفتاح خاطئ. راجع سجل التشغيل في تبويب `Actions`.
-
-**`لا توجد أخبار جديدة لم تُرسل من قبل`** — كل ما في المصادر خلال ٧٢ ساعة سبق إرساله. هذا طبيعي في يوم هادئ، ولن يصلك إيميل فارغ. لإعادة الضبط احذف مجلد `state`.
-
-**وصلتك أخبار مكررة رغم الذاكرة** — على GitHub Actions قد تُحذف الذاكرة المؤقتة إذا لم تُستخدم سبعة أيام، أو عند تجاوز حد التخزين. تعود الذاكرة للعمل تلقائيًا من التشغيلة التالية.
-
-**`نص غير كافٍ من X، سيُستخدم مقتطف RSS`** — الموقع يحجب الزوار الآليين أو خلف جدار دفع. ليس خطأ: يكمل السكربت بمقتطف RSS لذلك الخبر فقط.
-
-**فشل مصدر واحد** — يتجاهله السكربت ويكمل بالباقي، ويطبع سبب الفشل في السجل. لا يوقف النشرة.
-
-**الجدولة لا تعمل بعد فترة** — GitHub يوقف الجداول تلقائيًا في المستودعات الخاملة ٦٠ يومًا. أي دفعة جديدة أو تشغيل يدوي يعيد تنشيطها.
+- **`Username and Password not accepted`** — using the regular Gmail password instead of an App Password, or leftover spaces in it.
+- **Email has raw headlines with a warning banner** — the OpenAI call failed (bad key or no credit); check the log under `Actions`.
+- **`No new unsent stories found`** — everything was already sent; normal on a quiet day. Delete the `state` folder to reset.
+- **Duplicate stories despite memory** — GitHub Actions can evict its cache after 7 days idle or over the storage limit; it self-heals from the next run.
+- **`Insufficient text from X, RSS excerpt will be used`** — the site blocked the fetch or is paywalled; not an error, that story just uses the RSS excerpt.
+- **One source fails** — ignored, logged, and the rest of the digest continues.
+- **Schedule stops firing** — GitHub disables schedules after 60 days of repo inactivity; any push or manual run reactivates it.

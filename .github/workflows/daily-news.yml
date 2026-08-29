@@ -1,12 +1,12 @@
-name: نشرة أخبار الذكاء الاصطناعي
+name: AI News Digest
 
 on:
   schedule:
-    # ثلاث محاولات في دقائق بعيدة عن بداية الساعة لتقليل أثر تأخير/إسقاط جدولة GitHub.
-    # علامة الإرسال اليومية داخل state تمنع وصول أكثر من نشرة واحدة.
-    - cron: "17 5 * * *" # 08:17 بتوقيت الرياض
-    - cron: "17 6 * * *" # 09:17 بتوقيت الرياض
-    - cron: "17 7 * * *" # 10:17 بتوقيت الرياض
+    # Three attempts at minutes offset from the hour to reduce the impact of GitHub scheduling delay/drops.
+    # The daily send marker in state prevents more than one digest from going out.
+    - cron: "17 5 * * *" # 08:17 Riyadh time
+    - cron: "17 6 * * *" # 09:17 Riyadh time
+    - cron: "17 7 * * *" # 10:17 Riyadh time
   workflow_dispatch:
 
 jobs:
@@ -27,16 +27,16 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      # مفتاح متجدد لأن ذاكرة التخزين غير قابلة للتعديل بعد إنشائها،
-      # و restore-keys يسترجع أحدث نسخة محفوظة من التشغيلة السابقة.
-      - name: استرجاع ذاكرة الأخبار المرسلة
+      # A rolling key because the cache is immutable once created,
+      # and restore-keys pulls the latest saved copy from the previous run.
+      - name: Restore sent-news memory
         uses: actions/cache@v6
         with:
           path: state
           key: seen-news-${{ github.run_id }}
           restore-keys: seen-news-
 
-      - name: إرسال النشرة
+      - name: Send digest
         env:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
